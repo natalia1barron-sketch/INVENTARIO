@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Inventario de Mantenimiento</title>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; background:#f4f6f9; padding:20px; }
+
+    .header { display:grid; grid-template-columns: auto 1fr auto; align-items:center; margin-bottom:20px; }
+    .header h1 { text-align:center; margin:0; }
+    .logo { height:60px; justify-self:start; }
+
+    .card { background:white; padding:20px; border-radius:15px; box-shadow:0 4px 15px rgba(0,0,0,0.1); margin-bottom:20px; }
+    .form { display:grid; grid-template-columns: repeat(4,1fr); gap:10px; }
+
+    input, select { padding:10px; border-radius:8px; border:1px solid #ccc; font-size:14px; }
+    input:focus, select:focus { outline:none; border-color:#4CAF50; box-shadow:0 0 5px rgba(76,175,80,0.3); }
+
+    .buttons { margin-top:15px; display:flex; gap:10px; }
+    button { padding:10px 15px; border:none; border-radius:8px; cursor:pointer; font-weight:bold; }
+    .btn-add { background:#4CAF50; color:white; }
+    .btn-excel { background:#2196F3; color:white; }
+    .btn-delete { background:#f44336; color:white; }
+
+    .search-box { margin-bottom:15px; }
+    .search-box input { width:100%; padding:10px; border-radius:8px; border:1px solid #ccc; }
+
+    table { width:100%; border-collapse:collapse; background:white; border-radius:10px; overflow:hidden; }
+    th { background:#2c3e50; color:white; padding:10px; font-size:13px; }
+    td { padding:8px; font-size:13px; }
+    tr:nth-child(even) { background:#f9f9f9; }
+
+    .rojo { background:#ff4d4d !important; color:white; }
+    .amarillo { background:#ffe066 !important; }
+    .verde { background:#b7f7b7 !important; }
+
+    .btn-edit { background:#ff9800; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <img class="logo" src="https://images.squarespace-cdn.com/content/v1/620ed8b50c43390f3c3413d1/a1c81e4e-aba8-48b0-adcd-9600d43276da/main_logo_color_footer.png?format=300w">
+  <h1>Inventario de Mantenimiento</h1>
+</div>
+
+<div class="card">
+  <div class="form">
+    <select id="categoria">
+      <option>Eléctrico</option>
+      <option>Mecánico</option>
+      <option>Hidráulico</option>
+      <option>Neumático</option>
+      <option>Electrónico</option>
+    </select>
+
+    <input type="text" id="producto" placeholder="Producto">
+    <input type="number" id="stock" placeholder="Stock">
+    <input type="number" id="minimo" placeholder="Stock mínimo">
+    <input type="number" id="maximo" placeholder="Stock máximo">
+
+    <select id="estado">
+      <option>Bueno</option>
+      <option>Regular</option>
+      <option>Crítico</option>
+    </select>
+
+    <input type="text" id="ubicacion" placeholder="Ubicación">
+
+    <select id="proveedor" onchange="llenarProveedor()"></select>
+
+    <input type="text" id="correo" placeholder="Correo proveedor" readonly>
+    <input type="text" id="telefono" placeholder="Teléfono proveedor" readonly>
+
+    <input type="date" id="fechaEntrada">
+    <input type="date" id="fechaSalida">
+  </div>
+
+  <div class="buttons">
+    <button class="btn-add" onclick="agregar()">Agregar / Actualizar</button>
+    <button class="btn-excel" onclick="descargarExcel()">Descargar Excel</button>
+    <button class="btn-delete" onclick="limpiarDatos()">Borrar todo</button>
+  </div>
+</div>
+
+<div class="card">
+  <div class="search-box">
+    <input type="text" id="buscador" placeholder="Buscar..." onkeyup="filtrar()">
+  </div>
+
+  <table id="tabla">
+    <thead>
+      <tr>
+        <th>ID</th><th>Categoría</th><th>Producto</th><th>Stock</th><th>Mínimo</th><th>Máximo</th><th>Estado</th><th>Ubicación</th><th>Proveedor</th><th>Correo</th><th>Teléfono</th><th>Entrada</th><th>Salida</th><th>Editar</th><th>Borrar</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+
+<script>
+let inventario = JSON.parse(localStorage.getItem('inventario')) || [];
+let inventarioFiltrado = [...inventario];
+let editIndex = null;
+
+const proveedores = {
+  "RISOUL": { nombre:"RISOUL Y CIA SA DE CV", correo:"dionicio.lopez@rs.group.com", telefono:"5562545030" },
+  "VEEKA": { nombre:"VENTAS VEEKA", correo:"ventas.veeka@outlook.com", telefono:"7223711019" },
+  "DSN": { nombre:"DSN AUTOMATIZACION", correo:"dsnautomatizacion@hotmail.com", telefono:"58925639" },
+  "SAMCA": { nombre:"SAMCA", correo:"samcamotores@gmail.com", telefono:"55656851" },
+  "ALPER": { nombre:"ALPER MATERIAL ELECTRICO", correo:"Alper.ventas@outlook.com", telefono:"" },
+  "ARIES": { nombre:"FERRETERA ARIES", correo:"mariana.aries5@hotmail.com", telefono:"" },
+  "RIO": { nombre:"RIO PISUEÑA", correo:"gsanchez@riopisuena.com.mx", telefono:"" },
+  "COLMENA": { nombre:"FERRE ACEROS LA COLMENA SA DE CV", correo:"ferreaceros-ventas@hotmail.com", telefono:"" },
+  "SURTETODO": { nombre:"FERRETERA SURTETODO DE MEXICO SA DE CV", correo:"ventas.6@fesumex.com.mx", telefono:"5572088953" },
+  "GABRIEL": { nombre:"GABRIEL REYES BONILLA", correo:"gabrielreyesbonilla@live.com.mx", telefono:"5532029379" },
+  "EDUARDO": { nombre:"EDUARDO LAGUNA", correo:"eduardo.lagunas@sygma.com.mx", telefono:"5553666800" },
+  "FORJA": { nombre:"FORJA MOTORS", correo:"", telefono:"4428180812" },
+  "HECTOS": { nombre:"COMERCIALIZADOR INDUSTRIAL HECTOS", correo:"direccion@hectos.com.mx", telefono:"5562260177" },
+  "ARCOS": { nombre:"FERRETERA LOS ARCOS", correo:"losarcos21_elec@hotmail.com", telefono:"5558810301" },
+  "ROGUI": { nombre:"RODAMIENTOS INDUSTRIALES ROGUI", correo:"rogui_003@hotmail.com", telefono:"5587373032" },
+  "RYASA": { nombre:"RYASA RODAMIENTOS Y ACCESORIOS", correo:"josue.guerrero@ryasa.com.mx", telefono:"5519890533" },
+  "STEMIN": { nombre:"STEMIN", correo:"stemin2023@outlook.com", telefono:"5541815841" },
+  "METALSA": { nombre:"METALSA UNIVERSAL", correo:"metalsa.universal@gmail.com", telefono:"5614877678" },
+  "TRANE": { nombre:"TRANE", correo:"einar.arenas@trane.com", telefono:"5579297160" },
+  "SHP": { nombre:"OLEOHIDRAULICA INDUSTRIAL SHP", correo:"c.otriz@oleohidarulica.mx", telefono:"3315249814" }
+};
+
+function cargarProveedores() {
+  const select = document.getElementById('proveedor');
+  select.innerHTML = '<option value="">Seleccionar proveedor</option>';
+  for (let key in proveedores) {
+    const option = document.createElement('option');
+    option.value = key;
+    option.textContent = proveedores[key].nombre;
+    select.appendChild(option);
+  }
+}
+
+function generarID() { return 'MTTO-' + Math.floor(Math.random() * 100000); }
+
+function llenarProveedor() {
+  const key = document.getElementById('proveedor').value;
+  if(proveedores[key]) {
+    document.getElementById('correo').value = proveedores[key].correo;
+    document.getElementById('telefono').value = proveedores[key].telefono;
+  }
+}
+
+function guardarLocal() { localStorage.setItem('inventario', JSON.stringify(inventario)); }
+
+function agregar() {
+  const item = {
+    id: editIndex !== null ? inventario[editIndex].id : generarID(),
+    categoria: categoria.value,
+    producto: producto.value,
+    stock: parseInt(stock.value) || 0,
+    minimo: parseInt(minimo.value) || 0,
+    maximo: parseInt(maximo.value) || 0,
+    estado: estado.value,
+    ubicacion: ubicacion.value,
+    proveedor: proveedor.options[proveedor.selectedIndex].text,
+    correo: correo.value,
+    telefono: telefono.value,
+    entrada: fechaEntrada.value,
+    salida: fechaSalida.value
+  };
+
+  if(editIndex !== null) { inventario[editIndex] = item; editIndex = null; }
+  else { inventario.push(item); }
+
+  inventarioFiltrado = [...inventario];
+  guardarLocal();
+  renderTabla();
+}
+
+function editar(i) {
+  const item = inventarioFiltrado[i];
+  const indexReal = inventario.findIndex(x => x.id === item.id);
+  categoria.value = item.categoria;
+  producto.value = item.producto;
+  stock.value = item.stock;
+  minimo.value = item.minimo;
+  maximo.value = item.maximo;
+  estado.value = item.estado;
+  ubicacion.value = item.ubicacion;
+  correo.value = item.correo;
+  telefono.value = item.telefono;
+  fechaEntrada.value = item.entrada;
+  fechaSalida.value = item.salida;
+  editIndex = indexReal;
+}
+
+function filtrar() {
+  const texto = buscador.value.toLowerCase();
+  inventarioFiltrado = inventario.filter(item => Object.values(item).join(' ').toLowerCase().includes(texto));
+  renderTabla();
+}
+
+function renderTabla() {
+  const tbody = document.querySelector('#tabla tbody');
+  tbody.innerHTML = '';
+  inventarioFiltrado.forEach((item,i) => {
+    const fila = document.createElement('tr');
+    if(item.stock === 0) fila.classList.add('rojo');
+    else if(item.stock <= item.minimo) fila.classList.add('amarillo');
+    else fila.classList.add('verde');
+
+    fila.innerHTML = `
+      <td>${item.id}</td><td>${item.categoria}</td><td>${item.producto}</td><td>${item.stock}</td>
+      <td>${item.minimo}</td><td>${item.maximo}</td><td>${item.estado}</td><td>${item.ubicacion}</td>
+      <td>${item.proveedor}</td><td>${item.correo}</td><td>${item.telefono}</td>
+      <td>${item.entrada}</td><td>${item.salida}</td>
+      <td><button class="btn-edit" onclick="editar(${i})">Editar</button></td>
+      <td><button class="btn-delete" onclick="eliminar(${i})">Borrar</button></td>
+    `;
+    tbody.appendChild(fila);
+  });
+}
+
+function eliminar(i) {
+  const item = inventarioFiltrado[i];
+  const indexReal = inventario.findIndex(x => x.id === item.id);
+  if(confirm("¿Eliminar este registro?")) {
+    inventario.splice(indexReal,1);
+    inventarioFiltrado = [...inventario];
+    guardarLocal();
+    renderTabla();
+  }
+}
+
+function limpiarDatos() {
+  if(confirm("¿Seguro que quieres borrar todo?")) {
+    localStorage.removeItem('inventario');
+    inventario = [];
+    inventarioFiltrado = [];
+    renderTabla();
+  }
+}
+
+function descargarExcel() {
+  const ws = XLSX.utils.json_to_sheet(inventario);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Inventario");
+  XLSX.writeFile(wb, "inventario_mantenimiento.xlsx");
+}
+
+// INIT
+cargarProveedores();
+renderTabla();
+</script>
+
+</body>
+</html>
