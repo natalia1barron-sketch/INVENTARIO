@@ -1,4 +1,4 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
@@ -10,48 +10,18 @@
 
     /* LOGIN */
     #loginBox {
-      position: fixed;
-      top:0; left:0;
-      width:100%; height:100%;
-      background:#f4f6f9;
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      z-index:9999;
+      position:fixed; top:0; left:0; width:100%; height:100%;
+      background:#f4f6f9; display:flex; justify-content:center; align-items:center; z-index:9999;
     }
-
     .login-card {
-      background:white;
-      padding:30px;
-      border-radius:15px;
-      box-shadow:0 4px 15px rgba(0,0,0,0.2);
-      text-align:center;
-      width:300px;
+      background:white; padding:30px; border-radius:15px;
+      box-shadow:0 4px 15px rgba(0,0,0,0.2); text-align:center; width:300px;
     }
-
-    .login-card input {
-      padding:10px;
-      margin-top:10px;
-      width:100%;
-      border-radius:8px;
-      border:1px solid #ccc;
-    }
-
-    .login-card button {
-      margin-top:15px;
-      padding:10px;
-      width:100%;
-      border:none;
-      background:#4CAF50;
-      color:white;
-      border-radius:8px;
-      font-weight:bold;
-      cursor:pointer;
-    }
-
+    .login-card input { padding:10px; margin-top:10px; width:100%; border-radius:8px; border:1px solid #ccc; box-sizing:border-box; }
+    .login-card button { margin-top:15px; padding:10px; width:100%; border:none; background:#4CAF50; color:white; border-radius:8px; font-weight:bold; cursor:pointer; }
     .error { color:red; font-size:12px; margin-top:10px; }
 
-    /* ORIGINAL */
+    /* LAYOUT */
     .header { display:grid; grid-template-columns: auto 1fr auto; align-items:center; margin-bottom:20px; }
     .header h1 { text-align:center; margin:0; }
     .logo { height:60px; justify-self:start; }
@@ -59,38 +29,75 @@
     .card { background:white; padding:20px; border-radius:15px; box-shadow:0 4px 15px rgba(0,0,0,0.1); margin-bottom:20px; }
     .form { display:grid; grid-template-columns: repeat(4,1fr); gap:10px; }
 
-    input, select { padding:10px; border-radius:8px; border:1px solid #ccc; font-size:14px; }
+    input, select { padding:10px; border-radius:8px; border:1px solid #ccc; font-size:14px; width:100%; box-sizing:border-box; }
     input:focus, select:focus { outline:none; border-color:#4CAF50; box-shadow:0 0 5px rgba(76,175,80,0.3); }
 
-    .buttons { margin-top:15px; display:flex; gap:10px; }
+    .buttons { margin-top:15px; display:flex; gap:10px; flex-wrap:wrap; }
     button { padding:10px 15px; border:none; border-radius:8px; cursor:pointer; font-weight:bold; }
-    .btn-add { background:#4CAF50; color:white; }
-    .btn-excel { background:#2196F3; color:white; }
+    .btn-add    { background:#4CAF50; color:white; }
+    .btn-excel  { background:#2196F3; color:white; }
     .btn-delete { background:#f44336; color:white; }
+    .btn-reload { background:#9c27b0; color:white; }
 
     .search-box { margin-bottom:15px; }
-    .search-box input { width:100%; padding:10px; border-radius:8px; border:1px solid #ccc; }
+    .search-box input { padding:10px; border-radius:8px; border:1px solid #ccc; width:100%; box-sizing:border-box; }
 
     table { width:100%; border-collapse:collapse; background:white; border-radius:10px; overflow:hidden; }
     th { background:#2c3e50; color:white; padding:10px; font-size:13px; }
     td { padding:8px; font-size:13px; }
     tr:nth-child(even) { background:#f9f9f9; }
 
-    .rojo { background:#ff4d4d !important; color:white; }
-    .amarillo { background:#ffe066 !important; }
-    .verde { background:#b7f7b7 !important; }
+    .rojo    { background:#ff4d4d !important; color:white; }
+    .amarillo{ background:#ffe066 !important; }
+    .verde   { background:#b7f7b7 !important; }
 
     .btn-edit { background:#ff9800; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer; }
+
+    /* LOADING OVERLAY */
+    #loadingOverlay {
+      position:fixed; top:0; left:0; width:100%; height:100%;
+      background:rgba(0,0,0,0.4); display:none; justify-content:center; align-items:center; z-index:8888;
+    }
+    .spinner-box { background:white; padding:30px 40px; border-radius:15px; text-align:center; }
+    .spinner {
+      width:40px; height:40px; border:4px solid #ccc; border-top-color:#4CAF50;
+      border-radius:50%; animation:spin 0.8s linear infinite; margin:0 auto 15px;
+    }
+    @keyframes spin { to { transform:rotate(360deg); } }
+
+    /* CONFIG PANEL */
+    #configPanel {
+      background:#fff3cd; border:1px solid #ffc107; border-radius:10px;
+      padding:15px; margin-bottom:15px; display:none;
+    }
+    #configPanel input { margin-bottom:8px; }
+    #configPanel .note { font-size:12px; color:#666; margin-top:8px; }
+
+    .status-bar {
+      font-size:12px; padding:6px 12px; border-radius:20px;
+      display:inline-block; margin-left:10px;
+    }
+    .status-ok    { background:#d4edda; color:#155724; }
+    .status-error { background:#f8d7da; color:#721c24; }
+    .status-warn  { background:#fff3cd; color:#856404; }
   </style>
 </head>
 
 <body>
 
+<!-- LOADING -->
+<div id="loadingOverlay">
+  <div class="spinner-box">
+    <div class="spinner"></div>
+    <div id="loadingMsg">Cargando...</div>
+  </div>
+</div>
+
 <!-- LOGIN -->
 <div id="loginBox">
   <div class="login-card">
     <h2>Acceso Inventario</h2>
-    <input type="password" id="password" placeholder="Ingresa la clave">
+    <input type="password" id="password" placeholder="Ingresa la clave" onkeydown="if(event.key==='Enter') login()">
     <button onclick="login()">Entrar</button>
     <div class="error" id="error"></div>
   </div>
@@ -99,191 +106,347 @@
 <!-- CONTENIDO -->
 <div id="contenido" style="display:none;">
 
-<div class="header">
-  <img class="logo" src="https://images.squarespace-cdn.com/content/v1/620ed8b50c43390f3c3413d1/a1c81e4e-aba8-48b0-adcd-9600d43276da/main_logo_color_footer.png?format=300w">
-  <h1>Inventario de Mantenimiento</h1>
-</div>
-
-<div class="card">
-  <div class="form">
-    <select id="categoria">
-      <option>Eléctrico</option>
-      <option>Mecánico</option>
-      <option>Hidráulico</option>
-      <option>Neumático</option>
-      <option>Electrónico</option>
-    </select>
-
-    <input type="text" id="producto" placeholder="Producto">
-    <input type="number" id="stock" placeholder="Stock">
-    <input type="number" id="minimo" placeholder="Stock mínimo">
-    <input type="number" id="maximo" placeholder="Stock máximo">
-
-    <select id="estado">
-      <option>Bueno</option>
-      <option>Regular</option>
-      <option>Crítico</option>
-    </select>
-
-    <input type="text" id="ubicacion" placeholder="Ubicación">
-
-    <select id="proveedor" onchange="llenarProveedor()"></select>
-
-    <input type="text" id="correo" placeholder="Correo proveedor" readonly>
-    <input type="text" id="telefono" placeholder="Teléfono proveedor" readonly>
-
-    <input type="date" id="fechaEntrada">
-    <input type="date" id="fechaSalida">
+  <div class="header">
+    <img class="logo" src="https://images.squarespace-cdn.com/content/v1/620ed8b50c43390f3c3413d1/a1c81e4e-aba8-48b0-adcd-9600d43276da/main_logo_color_footer.png?format=300w">
+    <h1>Inventario de Mantenimiento</h1>
   </div>
 
-  <div class="buttons">
-    <button class="btn-add" onclick="agregar()">Agregar / Actualizar</button>
-    <button class="btn-excel" onclick="descargarExcel()">Descargar Excel</button>
-    <button class="btn-delete" onclick="limpiarDatos()">Borrar todo</button>
+  <!-- CONFIG PANEL (URL de Apps Script) -->
+  <div id="configPanel">
+    <strong>⚙️ Configuración — URL del Web App</strong><br>
+    <input type="text" id="scriptUrl" placeholder="Pega aquí la URL de tu Apps Script Web App (termina en /exec)">
+    <button onclick="guardarConfig()" style="background:#ffc107;border:none;padding:8px 14px;border-radius:8px;cursor:pointer;font-weight:bold;">Guardar URL</button>
+    <div class="note">
+      Pasos: Apps Script → Implementar → Nueva implementación → Tipo: App web →<br>
+      Ejecutar como: <b>Yo</b> → Quién tiene acceso: <b>Cualquier usuario</b> → Implementar → copiar URL.
+    </div>
   </div>
-</div>
 
-<div class="card">
-  <div class="search-box">
-    <input type="text" id="buscador" placeholder="Buscar..." onkeyup="filtrar()">
+  <div class="card">
+    <div class="form">
+      <select id="categoria">
+        <option>Eléctrico</option><option>Mecánico</option>
+        <option>Hidráulico</option><option>Neumático</option><option>Electrónico</option>
+      </select>
+      <input type="text"   id="producto"    placeholder="Producto">
+      <input type="number" id="stock"       placeholder="Stock">
+      <input type="number" id="minimo"      placeholder="Stock mínimo">
+      <input type="number" id="maximo"      placeholder="Stock máximo">
+      <select id="estado">
+        <option>Bueno</option><option>Regular</option><option>Crítico</option>
+      </select>
+      <input type="text" id="ubicacion"   placeholder="Ubicación">
+      <select id="proveedor" onchange="llenarProveedor()"></select>
+      <input type="text" id="correo"      placeholder="Correo proveedor"   readonly>
+      <input type="text" id="telefono"    placeholder="Teléfono proveedor" readonly>
+      <input type="date" id="fechaEntrada">
+      <input type="date" id="fechaSalida">
+    </div>
+
+    <div class="buttons">
+      <button class="btn-add"    onclick="agregar()">Agregar / Actualizar</button>
+      <button class="btn-excel"  onclick="descargarExcel()">Descargar Excel</button>
+      <button class="btn-reload" onclick="cargarDatos()">🔄 Recargar</button>
+      <button class="btn-delete" onclick="limpiarDatos()">Borrar todo</button>
+      <button onclick="toggleConfig()" style="background:#6c757d;color:white;">⚙️ Config URL</button>
+      <span id="statusBar" class="status-bar status-warn">Sin configurar</span>
+    </div>
   </div>
 
-  <table id="tabla">
-    <thead>
-      <tr>
-        <th>ID</th><th>Categoría</th><th>Producto</th><th>Stock</th><th>Mínimo</th><th>Máximo</th><th>Estado</th><th>Ubicación</th><th>Proveedor</th><th>Correo</th><th>Teléfono</th><th>Entrada</th><th>Salida</th><th>Editar</th><th>Borrar</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-</div>
+  <div class="card">
+    <div class="search-box">
+      <input type="text" id="buscador" placeholder="Buscar..." onkeyup="filtrar()">
+    </div>
+    <table id="tabla">
+      <thead>
+        <tr>
+          <th>ID</th><th>Categoría</th><th>Producto</th><th>Stock</th><th>Mínimo</th>
+          <th>Máximo</th><th>Estado</th><th>Ubicación</th><th>Proveedor</th>
+          <th>Correo</th><th>Teléfono</th><th>Entrada</th><th>Salida</th>
+          <th>Editar</th><th>Borrar</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
 
-</div>
+</div><!-- /contenido -->
 
 <script>
+// =====================================================================
+//  CONFIGURACIÓN
+// =====================================================================
 const CLAVE = "2171916";
+let SCRIPT_URL = localStorage.getItem('scriptUrl') || "";
 
+// =====================================================================
+//  LOGIN
+// =====================================================================
 function login() {
   const pass = document.getElementById("password").value;
-  if(pass === CLAVE){
+  if (pass === CLAVE) {
     document.getElementById("loginBox").style.display = "none";
     document.getElementById("contenido").style.display = "block";
+    if (!SCRIPT_URL) {
+      document.getElementById("configPanel").style.display = "block";
+      setStatus("warn", "Configura la URL del script");
+    } else {
+      cargarDatos();
+    }
   } else {
     document.getElementById("error").textContent = "Clave incorrecta";
   }
 }
 
-let inventario = JSON.parse(localStorage.getItem('inventario')) || [];
-let inventarioFiltrado = [...inventario];
-let editIndex = null;
+// =====================================================================
+//  CONFIG PANEL
+// =====================================================================
+function toggleConfig() {
+  const panel = document.getElementById("configPanel");
+  panel.style.display = panel.style.display === "none" ? "block" : "none";
+  if (SCRIPT_URL) document.getElementById("scriptUrl").value = SCRIPT_URL;
+}
 
+function guardarConfig() {
+  const url = document.getElementById("scriptUrl").value.trim();
+  if (!url || !url.includes("script.google.com")) {
+    alert("URL inválida. Debe contener 'script.google.com'");
+    return;
+  }
+  SCRIPT_URL = url;
+  localStorage.setItem('scriptUrl', url);
+  document.getElementById("configPanel").style.display = "none";
+  setStatus("ok", "URL guardada");
+  cargarDatos();
+}
+
+function setStatus(type, msg) {
+  const el = document.getElementById("statusBar");
+  el.className = "status-bar status-" + type;
+  el.textContent = msg;
+}
+
+// =====================================================================
+//  API HELPER — llama al Apps Script
+// =====================================================================
+async function api(params) {
+  if (!SCRIPT_URL) {
+    alert("Primero configura la URL del Apps Script (botón ⚙️ Config URL)");
+    throw new Error("Sin URL");
+  }
+  const qs = new URLSearchParams(params).toString();
+  const url = SCRIPT_URL + "?" + qs;
+  const res = await fetch(url);
+  const json = await res.json();
+  if (!json.success) throw new Error(json.error || "Error desconocido");
+  return json;
+}
+
+// =====================================================================
+//  ESTADO LOCAL
+// =====================================================================
+let inventario = [];
+let inventarioFiltrado = [];
+let editId = null;  // ID del item en edición
+
+// =====================================================================
+//  PROVEEDORES
+// =====================================================================
 const proveedores = {
-  "RISOUL": { nombre:"RISOUL Y CIA SA DE CV", correo:"dionicio.lopez@rs.group.com", telefono:"5562545030" },
-  "VEEKA": { nombre:"VENTAS VEEKA", correo:"ventas.veeka@outlook.com", telefono:"7223711019" },
-  "DSN": { nombre:"DSN AUTOMATIZACION", correo:"dsnautomatizacion@hotmail.com", telefono:"58925639" },
-  "SAMCA": { nombre:"SAMCA", correo:"samcamotores@gmail.com", telefono:"55656851" },
-  "ALPER": { nombre:"ALPER MATERIAL ELECTRICO", correo:"Alper.ventas@outlook.com", telefono:"" },
-  "ARIES": { nombre:"FERRETERA ARIES", correo:"mariana.aries5@hotmail.com", telefono:"" },
-  "RIO": { nombre:"RIO PISUEÑA", correo:"gsanchez@riopisuena.com.mx", telefono:"" },
-  "COLMENA": { nombre:"FERRE ACEROS LA COLMENA SA DE CV", correo:"ferreaceros-ventas@hotmail.com", telefono:"" },
-  "SURTETODO": { nombre:"FERRETERA SURTETODO DE MEXICO SA DE CV", correo:"ventas.6@fesumex.com.mx", telefono:"5572088953" },
-  "GABRIEL": { nombre:"GABRIEL REYES BONILLA", correo:"gabrielreyesbonilla@live.com.mx", telefono:"5532029379" },
-  "EDUARDO": { nombre:"EDUARDO LAGUNA", correo:"eduardo.lagunas@sygma.com.mx", telefono:"5553666800" },
-  "FORJA": { nombre:"FORJA MOTORS", correo:"", telefono:"4428180812" },
-  "HECTOS": { nombre:"COMERCIALIZADOR INDUSTRIAL HECTOS", correo:"direccion@hectos.com.mx", telefono:"5562260177" },
-  "ARCOS": { nombre:"FERRETERA LOS ARCOS", correo:"losarcos21_elec@hotmail.com", telefono:"5558810301" },
-  "ROGUI": { nombre:"RODAMIENTOS INDUSTRIALES ROGUI", correo:"rogui_003@hotmail.com", telefono:"5587373032" },
-  "RYASA": { nombre:"RYASA RODAMIENTOS Y ACCESORIOS", correo:"josue.guerrero@ryasa.com.mx", telefono:"5519890533" },
-  "STEMIN": { nombre:"STEMIN", correo:"stemin2023@outlook.com", telefono:"5541815841" },
-  "METALSA": { nombre:"METALSA UNIVERSAL", correo:"metalsa.universal@gmail.com", telefono:"5614877678" },
-  "TRANE": { nombre:"TRANE", correo:"einar.arenas@trane.com", telefono:"5579297160" },
-  "SHP": { nombre:"OLEOHIDRAULICA INDUSTRIAL SHP", correo:"c.otriz@oleohidarulica.mx", telefono:"3315249814" }
+  "RISOUL":    { nombre:"RISOUL Y CIA SA DE CV",              correo:"dionicio.lopez@rs.group.com",        telefono:"5562545030" },
+  "VEEKA":     { nombre:"VENTAS VEEKA",                       correo:"ventas.veeka@outlook.com",           telefono:"7223711019" },
+  "DSN":       { nombre:"DSN AUTOMATIZACION",                 correo:"dsnautomatizacion@hotmail.com",      telefono:"58925639"   },
+  "SAMCA":     { nombre:"SAMCA",                              correo:"samcamotores@gmail.com",             telefono:"55656851"   },
+  "ALPER":     { nombre:"ALPER MATERIAL ELECTRICO",           correo:"Alper.ventas@outlook.com",           telefono:""           },
+  "ARIES":     { nombre:"FERRETERA ARIES",                    correo:"mariana.aries5@hotmail.com",         telefono:""           },
+  "RIO":       { nombre:"RIO PISUEÑA",                        correo:"gsanchez@riopisuena.com.mx",         telefono:""           },
+  "COLMENA":   { nombre:"FERRE ACEROS LA COLMENA SA DE CV",   correo:"ferreaceros-ventas@hotmail.com",     telefono:""           },
+  "SURTETODO": { nombre:"FERRETERA SURTETODO DE MEXICO SA DE CV", correo:"ventas.6@fesumex.com.mx",       telefono:"5572088953" },
+  "GABRIEL":   { nombre:"GABRIEL REYES BONILLA",              correo:"gabrielreyesbonilla@live.com.mx",   telefono:"5532029379" },
+  "EDUARDO":   { nombre:"EDUARDO LAGUNA",                     correo:"eduardo.lagunas@sygma.com.mx",      telefono:"5553666800" },
+  "FORJA":     { nombre:"FORJA MOTORS",                       correo:"",                                   telefono:"4428180812" },
+  "HECTOS":    { nombre:"COMERCIALIZADOR INDUSTRIAL HECTOS",  correo:"direccion@hectos.com.mx",           telefono:"5562260177" },
+  "ARCOS":     { nombre:"FERRETERA LOS ARCOS",                correo:"losarcos21_elec@hotmail.com",       telefono:"5558810301" },
+  "ROGUI":     { nombre:"RODAMIENTOS INDUSTRIALES ROGUI",     correo:"rogui_003@hotmail.com",             telefono:"5587373032" },
+  "RYASA":     { nombre:"RYASA RODAMIENTOS Y ACCESORIOS",     correo:"josue.guerrero@ryasa.com.mx",       telefono:"5519890533" },
+  "STEMIN":    { nombre:"STEMIN",                             correo:"stemin2023@outlook.com",             telefono:"5541815841" },
+  "METALSA":   { nombre:"METALSA UNIVERSAL",                  correo:"metalsa.universal@gmail.com",       telefono:"5614877678" },
+  "TRANE":     { nombre:"TRANE",                              correo:"einar.arenas@trane.com",            telefono:"5579297160" },
+  "SHP":       { nombre:"OLEOHIDRAULICA INDUSTRIAL SHP",      correo:"c.otriz@oleohidarulica.mx",         telefono:"3315249814" }
 };
 
 function cargarProveedores() {
-  const select = document.getElementById('proveedor');
-  select.innerHTML = '<option value="">Seleccionar proveedor</option>';
-  for (let key in proveedores) {
-    const option = document.createElement('option');
-    option.value = key;
-    option.textContent = proveedores[key].nombre;
-    select.appendChild(option);
+  const sel = document.getElementById('proveedor');
+  sel.innerHTML = '<option value="">Seleccionar proveedor</option>';
+  for (const key in proveedores) {
+    const opt = document.createElement('option');
+    opt.value = key;
+    opt.textContent = proveedores[key].nombre;
+    sel.appendChild(opt);
   }
 }
 
-function generarID() { return 'MTTO-' + Math.floor(Math.random() * 100000); }
-
 function llenarProveedor() {
   const key = document.getElementById('proveedor').value;
-  if(proveedores[key]) {
-    document.getElementById('correo').value = proveedores[key].correo;
+  if (proveedores[key]) {
+    document.getElementById('correo').value   = proveedores[key].correo;
     document.getElementById('telefono').value = proveedores[key].telefono;
   }
 }
 
-function guardarLocal() { localStorage.setItem('inventario', JSON.stringify(inventario)); }
+// =====================================================================
+//  LOADING HELPERS
+// =====================================================================
+function showLoading(msg = "Procesando...") {
+  document.getElementById("loadingMsg").textContent = msg;
+  document.getElementById("loadingOverlay").style.display = "flex";
+}
+function hideLoading() {
+  document.getElementById("loadingOverlay").style.display = "none";
+}
 
-function agregar() {
+// =====================================================================
+//  CARGAR DATOS desde Google Sheets
+// =====================================================================
+async function cargarDatos() {
+  showLoading("Cargando inventario desde Google Sheets...");
+  try {
+    const res = await api({ action: "getAll" });
+    inventario = res.data || [];
+    inventarioFiltrado = [...inventario];
+    renderTabla();
+    setStatus("ok", `✅ ${inventario.length} registros cargados`);
+  } catch (err) {
+    setStatus("error", "❌ Error al cargar: " + err.message);
+    alert("Error al conectar con Google Sheets:\n" + err.message);
+  } finally {
+    hideLoading();
+  }
+}
+
+// =====================================================================
+//  AGREGAR / ACTUALIZAR
+// =====================================================================
+function generarID() { return 'MTTO-' + Math.floor(Math.random() * 100000); }
+
+async function agregar() {
+  const selProv = document.getElementById('proveedor');
   const item = {
-    id: editIndex !== null ? inventario[editIndex].id : generarID(),
-    categoria: categoria.value,
-    producto: producto.value,
-    stock: parseInt(stock.value) || 0,
-    minimo: parseInt(minimo.value) || 0,
-    maximo: parseInt(maximo.value) || 0,
-    estado: estado.value,
-    ubicacion: ubicacion.value,
-    proveedor: proveedor.options[proveedor.selectedIndex].text,
-    correo: correo.value,
-    telefono: telefono.value,
-    entrada: fechaEntrada.value,
-    salida: fechaSalida.value
+    id:         editId || generarID(),
+    categoria:  document.getElementById('categoria').value,
+    producto:   document.getElementById('producto').value,
+    stock:      document.getElementById('stock').value || "0",
+    minimo:     document.getElementById('minimo').value || "0",
+    maximo:     document.getElementById('maximo').value || "0",
+    estado:     document.getElementById('estado').value,
+    ubicacion:  document.getElementById('ubicacion').value,
+    proveedor:  selProv.options[selProv.selectedIndex].text,
+    correo:     document.getElementById('correo').value,
+    telefono:   document.getElementById('telefono').value,
+    entrada:    document.getElementById('fechaEntrada').value,
+    salida:     document.getElementById('fechaSalida').value,
   };
 
-  if(editIndex !== null) { inventario[editIndex] = item; editIndex = null; }
-  else { inventario.push(item); }
+  if (!item.producto.trim()) { alert("Escribe el nombre del producto."); return; }
 
-  inventarioFiltrado = [...inventario];
-  guardarLocal();
-  renderTabla();
+  showLoading(editId ? "Actualizando registro..." : "Guardando nuevo registro...");
+  try {
+    const action = editId ? "update" : "add";
+    await api({ action, ...item });
+    editId = null;
+    await cargarDatos();
+    limpiarFormulario();
+  } catch (err) {
+    hideLoading();
+    alert("Error al guardar:\n" + err.message);
+  }
 }
 
+// =====================================================================
+//  EDITAR (llena el formulario)
+// =====================================================================
 function editar(i) {
   const item = inventarioFiltrado[i];
-  const indexReal = inventario.findIndex(x => x.id === item.id);
-  categoria.value = item.categoria;
-  producto.value = item.producto;
-  stock.value = item.stock;
-  minimo.value = item.minimo;
-  maximo.value = item.maximo;
-  estado.value = item.estado;
-  ubicacion.value = item.ubicacion;
-  correo.value = item.correo;
-  telefono.value = item.telefono;
-  fechaEntrada.value = item.entrada;
-  fechaSalida.value = item.salida;
-  editIndex = indexReal;
+  document.getElementById('categoria').value    = item.categoria;
+  document.getElementById('producto').value     = item.producto;
+  document.getElementById('stock').value        = item.stock;
+  document.getElementById('minimo').value       = item.minimo;
+  document.getElementById('maximo').value       = item.maximo;
+  document.getElementById('estado').value       = item.estado;
+  document.getElementById('ubicacion').value    = item.ubicacion;
+  document.getElementById('correo').value       = item.correo;
+  document.getElementById('telefono').value     = item.telefono;
+  document.getElementById('fechaEntrada').value = item.entrada;
+  document.getElementById('fechaSalida').value  = item.salida;
+  editId = item.id;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
+// =====================================================================
+//  ELIMINAR
+// =====================================================================
+async function eliminar(i) {
+  const item = inventarioFiltrado[i];
+  if (!confirm(`¿Eliminar "${item.producto}"?`)) return;
+  showLoading("Eliminando registro...");
+  try {
+    await api({ action: "delete", id: item.id });
+    await cargarDatos();
+  } catch (err) {
+    hideLoading();
+    alert("Error al eliminar:\n" + err.message);
+  }
+}
+
+// =====================================================================
+//  BORRAR TODO
+// =====================================================================
+async function limpiarDatos() {
+  if (!confirm("¿Seguro que quieres borrar TODOS los registros de Google Sheets?")) return;
+  showLoading("Borrando todos los registros...");
+  try {
+    await api({ action: "clear" });
+    await cargarDatos();
+  } catch (err) {
+    hideLoading();
+    alert("Error al limpiar:\n" + err.message);
+  }
+}
+
+// =====================================================================
+//  FILTRAR (local, sin llamada al servidor)
+// =====================================================================
 function filtrar() {
-  const texto = buscador.value.toLowerCase();
-  inventarioFiltrado = inventario.filter(item => Object.values(item).join(' ').toLowerCase().includes(texto));
+  const texto = document.getElementById('buscador').value.toLowerCase();
+  inventarioFiltrado = inventario.filter(item =>
+    Object.values(item).join(' ').toLowerCase().includes(texto)
+  );
   renderTabla();
 }
 
+// =====================================================================
+//  RENDER TABLA
+// =====================================================================
 function renderTabla() {
   const tbody = document.querySelector('#tabla tbody');
   tbody.innerHTML = '';
-  inventarioFiltrado.forEach((item,i) => {
+  if (!inventarioFiltrado.length) {
+    tbody.innerHTML = '<tr><td colspan="15" style="text-align:center;padding:20px;color:#888;">Sin registros</td></tr>';
+    return;
+  }
+  inventarioFiltrado.forEach((item, i) => {
     const fila = document.createElement('tr');
-    if(item.stock === 0) fila.classList.add('rojo');
-    else if(item.stock <= item.minimo) fila.classList.add('amarillo');
-    else fila.classList.add('verde');
+    const s = parseInt(item.stock) || 0;
+    const m = parseInt(item.minimo) || 0;
+    if (s === 0)      fila.classList.add('rojo');
+    else if (s <= m)  fila.classList.add('amarillo');
+    else              fila.classList.add('verde');
 
     fila.innerHTML = `
-      <td>${item.id}</td><td>${item.categoria}</td><td>${item.producto}</td><td>${item.stock}</td>
-      <td>${item.minimo}</td><td>${item.maximo}</td><td>${item.estado}</td><td>${item.ubicacion}</td>
-      <td>${item.proveedor}</td><td>${item.correo}</td><td>${item.telefono}</td>
+      <td>${item.id}</td><td>${item.categoria}</td><td>${item.producto}</td>
+      <td>${item.stock}</td><td>${item.minimo}</td><td>${item.maximo}</td>
+      <td>${item.estado}</td><td>${item.ubicacion}</td><td>${item.proveedor}</td>
+      <td>${item.correo}</td><td>${item.telefono}</td>
       <td>${item.entrada}</td><td>${item.salida}</td>
       <td><button class="btn-edit" onclick="editar(${i})">Editar</button></td>
       <td><button class="btn-delete" onclick="eliminar(${i})">Borrar</button></td>
@@ -292,36 +455,34 @@ function renderTabla() {
   });
 }
 
-function eliminar(i) {
-  const item = inventarioFiltrado[i];
-  const indexReal = inventario.findIndex(x => x.id === item.id);
-  if(confirm("¿Eliminar este registro?")) {
-    inventario.splice(indexReal,1);
-    inventarioFiltrado = [...inventario];
-    guardarLocal();
-    renderTabla();
-  }
-}
-
-function limpiarDatos() {
-  if(confirm("¿Seguro que quieres borrar todo?")) {
-    localStorage.removeItem('inventario');
-    inventario = [];
-    inventarioFiltrado = [];
-    renderTabla();
-  }
-}
-
+// =====================================================================
+//  EXPORTAR EXCEL (desde datos locales ya cargados)
+// =====================================================================
 function descargarExcel() {
+  if (!inventario.length) { alert("No hay datos para exportar."); return; }
   const ws = XLSX.utils.json_to_sheet(inventario);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Inventario");
   XLSX.writeFile(wb, "inventario_mantenimiento.xlsx");
 }
 
-// INIT
+// =====================================================================
+//  HELPERS
+// =====================================================================
+function limpiarFormulario() {
+  ['producto','stock','minimo','maximo','ubicacion','correo','telefono','fechaEntrada','fechaSalida']
+    .forEach(id => document.getElementById(id).value = '');
+  document.getElementById('proveedor').value = '';
+  editId = null;
+}
+
+// =====================================================================
+//  INIT
+// =====================================================================
 cargarProveedores();
-renderTabla();
+if (SCRIPT_URL) {
+  document.getElementById("scriptUrl").value = SCRIPT_URL;
+}
 </script>
 
 </body>
