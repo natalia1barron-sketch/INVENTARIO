@@ -247,7 +247,22 @@ async function api(params) {
 // =====================================================================
 let inventario = [];
 let inventarioFiltrado = [];
-let editId = null;  // ID del item en edición
+let editId = null;
+
+// =====================================================================
+//  FORMATEAR FECHA — convierte cualquier formato de fecha a DD/MM/YYYY
+// =====================================================================
+function formatearFecha(fecha) {
+  if (!fecha) return '';
+  // Intentar parsear la fecha (funciona con "Wed Apr 08 2026 00:00:00 GMT-0600"
+  // y también con "YYYY-MM-DD")
+  const d = new Date(fecha);
+  if (isNaN(d.getTime())) return fecha; // si no es una fecha válida, devolver tal cual
+  const dia  = String(d.getDate()).padStart(2, '0');
+  const mes  = String(d.getMonth() + 1).padStart(2, '0');
+  const anio = d.getFullYear();
+  return `${dia}/${mes}/${anio}`;
+}
 
 // =====================================================================
 //  PROVEEDORES
@@ -376,10 +391,24 @@ function editar(i) {
   document.getElementById('ubicacion').value    = item.ubicacion;
   document.getElementById('correo').value       = item.correo;
   document.getElementById('telefono').value     = item.telefono;
-  document.getElementById('fechaEntrada').value = item.entrada;
-  document.getElementById('fechaSalida').value  = item.salida;
+
+  // Convertir la fecha al formato YYYY-MM-DD para el input type="date"
+  document.getElementById('fechaEntrada').value = fechaParaInput(item.entrada);
+  document.getElementById('fechaSalida').value  = fechaParaInput(item.salida);
+
   editId = item.id;
   window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Convierte cualquier formato de fecha a YYYY-MM-DD (requerido por input type="date")
+function fechaParaInput(fecha) {
+  if (!fecha) return '';
+  const d = new Date(fecha);
+  if (isNaN(d.getTime())) return '';
+  const anio = d.getFullYear();
+  const mes  = String(d.getMonth() + 1).padStart(2, '0');
+  const dia  = String(d.getDate()).padStart(2, '0');
+  return `${anio}-${mes}-${dia}`;
 }
 
 // =====================================================================
@@ -447,7 +476,8 @@ function renderTabla() {
       <td>${item.stock}</td><td>${item.minimo}</td><td>${item.maximo}</td>
       <td>${item.estado}</td><td>${item.ubicacion}</td><td>${item.proveedor}</td>
       <td>${item.correo}</td><td>${item.telefono}</td>
-      <td>${item.entrada}</td><td>${item.salida}</td>
+      <td>${formatearFecha(item.entrada)}</td>
+      <td>${formatearFecha(item.salida)}</td>
       <td><button class="btn-edit" onclick="editar(${i})">Editar</button></td>
       <td><button class="btn-delete" onclick="eliminar(${i})">Borrar</button></td>
     `;
@@ -456,11 +486,16 @@ function renderTabla() {
 }
 
 // =====================================================================
-//  EXPORTAR EXCEL (desde datos locales ya cargados)
+//  EXPORTAR EXCEL (fechas formateadas como DD/MM/YYYY)
 // =====================================================================
 function descargarExcel() {
   if (!inventario.length) { alert("No hay datos para exportar."); return; }
-  const ws = XLSX.utils.json_to_sheet(inventario);
+  const datos = inventario.map(item => ({
+    ...item,
+    entrada: formatearFecha(item.entrada),
+    salida:  formatearFecha(item.salida),
+  }));
+  const ws = XLSX.utils.json_to_sheet(datos);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Inventario");
   XLSX.writeFile(wb, "inventario_mantenimiento.xlsx");
