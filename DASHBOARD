@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Reporte Semanal de Mantenimiento</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap%27);
+ 
+:root {
+--bg: #f0f2f5;
+--surface: #ffffff;
+--surface2: #f7f8fa;
+--border: #e2e6ea;
+--text: #1a1d23;
+--text2: #6b7280;
+--blue: #3498db;
+--orange: #f39c12;
+--pink: #CD3278;
+--purple: #9b59b6;
+--crimson: #CD3700;
+--green: #00C853;
+--yellow: #FFD600;
+--red: #FF1744;
+--navy: #0B3D91;
+--radius: 14px;
+--shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+ 
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); font-size: 14px; }
+ 
+/* ── LOGIN ── */
+#loginBox {
+position: fixed; inset: 0; background: linear-gradient(135deg,#0B3D91 0%,#1a6dbf 100%);
+display: flex; align-items: center; justify-content: center; z-index: 9999;
+}
+.login-card {
+background: white; border-radius: 20px; padding: 40px 36px; width: 340px; text-align: center;
+box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+}
+.login-card h2 { font-size: 22px; font-weight: 700; margin-bottom: 6px; color: var(--text); }
+.login-card p  { color: var(--text2); font-size: 13px; margin-bottom: 24px; }
+.login-card input {
+width: 100%; padding: 12px 14px; border: 1.5px solid var(--border); border-radius: 10px;
+font-size: 15px; font-family: 'DM Mono', monospace; letter-spacing: 4px; text-align: center;
+outline: none; transition: border .2s;
+}
+.login-card input:focus { border-color: var(--blue); }
+.login-card button {
+margin-top: 16px; width: 100%; padding: 12px; border: none; border-radius: 10px;
+background: var(--navy); color: white; font-size: 15px; font-weight: 700; cursor: pointer;
+transition: background .2s;
+}
+.login-card button:hover { background: #082d6e; }
+.login-error { color: #e53935; font-size: 12px; margin-top: 10px; height: 16px; }
+ 
+/* ── LOADING ── */
+#loadingOverlay {
+position: fixed; inset: 0; background: rgba(0,0,0,0.35);
+display: none; align-items: center; justify-content: center; z-index: 8888;
+}
+.spinner-box { background: white; padding: 28px 36px; border-radius: 16px; text-align: center; }
+.spinner {
+width: 38px; height: 38px; border: 4px solid #e0e0e0; border-top-color: var(--blue);
+border-radius: 50%; animation: spin .75s linear infinite; margin: 0 auto 14px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.spinner-box p { font-size: 13px; color: var(--text2); }
+ 
+/* ── LAYOUT ── */
+#app { display: none; min-height: 100vh; }
+ 
+.topbar {
+background: var(--navy); color: white; padding: 0 28px;
+display: flex; align-items: center; justify-content: space-between; height: 58px;
+box-shadow: 0 2px 10px rgba(11,61,145,0.3);
+}
+.topbar-left { display: flex; align-items: center; gap: 14px; }
+.topbar-left img { height: 34px; filter: brightness(0) invert(1); }
+.topbar-title { font-size: 16px; font-weight: 700; letter-spacing: .3px; }
+.topbar-right { display: flex; align-items: center; gap: 10px; }
+.tag-status { font-size: 11px; font-weight: 500; padding: 4px 10px; border-radius: 20px; }
+.tag-ok   { background: rgba(0,200,83,.18); color: #00C853; }
+.tag-warn { background: rgba(255,214,0,.18); color: #F9A825; }
+.tag-err  { background: rgba(255,23,68,.18); color: #FF1744; }
+.btn-config { background: rgba(255,255,255,.15); border: none; color: white; padding: 7px 13px;
+border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; }
+.btn-config:hover { background: rgba(255,255,255,.25); }
+ 
+.main { padding: 22px 28px; }
+ 
+/* ── CONFIG PANEL ── */
+#configPanel {
+background: #fffde7; border: 1px solid #ffe082; border-radius: var(--radius);
+padding: 16px 20px; margin-bottom: 18px; display: none;
+}
+#configPanel strong { font-size: 13px; }
+#configPanel .cfg-row { display: flex; gap: 10px; margin-top: 10px; }
+#configPanel input { flex: 1; padding: 9px 12px; border: 1px solid #ffe082; border-radius: 8px; font-size: 13px; }
+#configPanel button { padding: 9px 16px; background: #F9A825; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; }
+#configPanel .note { font-size: 11px; color: #888; margin-top: 8px; line-height: 1.5; }
+ 
+/* ── FILTER BAR ── */
+.filter-bar {
+background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow);
+padding: 14px 20px; margin-bottom: 18px;
+display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end;
+}
+.filter-group { display: flex; flex-direction: column; gap: 4px; }
+.filter-group label { font-size: 11px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: .5px; }
+.filter-group select,
+.filter-group input[type=date],
+.filter-group input[type=number] {
+padding: 8px 12px; border: 1.5px solid var(--border); border-radius: 9px;
+font-size: 13px; font-family: 'DM Sans', sans-serif; background: var(--surface2);
+color: var(--text); outline: none; min-width: 140px; transition: border .2s;
+}
+.filter-group select:focus,
+.filter-group input:focus { border-color: var(--blue); }
+.filter-actions { display: flex; gap: 8px; align-items: flex-end; margin-left: auto; flex-wrap: wrap; }
+.btn { padding: 9px 16px; border: none; border-radius: 9px; cursor: pointer; font-weight: 700; font-size: 13px; transition: .15s; }
+.btn-reload { background: var(--surface2); border: 1.5px solid var(--border); color: var(--text2); }
+.btn-reload:hover { background: var(--border); }
+.btn-dl { background: var(--navy); color: white; }
+.btn-dl:hover { background: #082d6e; }
+ 
+/* ── KPI CARDS ── */
+.kpi-grid { display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: 14px; margin-bottom: 18px; }
+.kpi-card {
+background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow);
+padding: 16px 14px 20px; text-align: center; position: relative; overflow: hidden;
+border-top: 5px solid transparent;
+}
+.kpi-card.blue   { border-top-color: var(--blue); }
+.kpi-card.orange { border-top-color: var(--orange); }
+.kpi-card.pink   { border-top-color: var(--pink); }
+.kpi-card.purple { border-top-color: var(--purple); }
+.kpi-card.crimson{ border-top-color: var(--crimson); }
+.kpi-label { font-size: 11px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: .4px; min-height: 28px; display: flex; align-items: center; justify-content: center; line-height: 1.3; }
+.kpi-val { font-size: 26px; font-weight: 700; margin-top: 6px; line-height: 1.1; font-family: 'DM Mono', monospace; }
+.kpi-val.sm { font-size: 14px; font-family: 'DM Sans', sans-serif; font-weight: 600; }
+.semaforo { position: absolute; bottom: 0; left: 0; right: 0; height: 5px; border-radius: 0 0 14px 14px; }
+.s-verde   { background: var(--green); }
+.s-amarillo{ background: var(--yellow); }
+.s-rojo    { background: var(--red); }
+ 
+/* ── PREV ROW ── */
+.prev-row { display: grid; grid-template-columns: 1fr 2fr; gap: 14px; margin-bottom: 18px; }
+.surface-card {
+background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px 20px;
+}
+.surface-card h3 { font-size: 12px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 10px; }
+.prev-val { font-size: 24px; font-weight: 700; font-family: 'DM Mono', monospace; margin-top: 6px; }
+ 
+/* ── TABLES ── */
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead th { background: var(--surface2); color: var(--text2); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; padding: 8px 10px; text-align: left; border-bottom: 1.5px solid var(--border); }
+tbody td { padding: 7px 10px; border-bottom: 1px solid var(--border); }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: var(--surface2); }
+ 
+/* ── CHARTS ROW ── */
+.charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 18px; }
+.chart-card { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px 18px; }
+.chart-card h3 { font-size: 11px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: .5px; text-align: center; margin-bottom: 12px; }
+ 
+/* ── DETAIL TABLE ── */
+.detail-card { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px 20px; }
+.detail-card h3 { font-size: 11px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 12px; }
+.table-wrap { overflow-x: auto; }
+.pag { display: flex; gap: 6px; justify-content: flex-end; margin-top: 12px; }
+.pag button { border: 1.5px solid var(--border); border-radius: 8px; padding: 5px 12px; font-size: 12px; background: var(--surface2); color: var(--text2); cursor: pointer; font-family: 'DM Sans', sans-serif; }
+.pag button.active { background: var(--navy); color: white; border-color: var(--navy); }
+.pag button:hover:not(.active) { background: var(--border); }
+ 
+.empty-msg { text-align: center; padding: 28px; color: var(--text2); font-size: 13px; }
+</style>
+</head>
+<body>
+ 
+<!-- LOADING -->
+<div id="loadingOverlay">
+<div class="spinner-box">
+<div class="spinner"></div>
+<p id="loadingMsg">Cargando...</p>
+</div>
+</div>
+ 
+<!-- LOGIN -->
+<div id="loginBox">
+<div class="login-card">
+<h2>Mantenimiento</h2>
+<p>Ingresa la clave de acceso para continuar</p>
+<input type="password" id="passInput" placeholder="••••••" maxlength="20"
+onkeydown="if(event.key==='Enter') login()">
+<button onclick="login()">Entrar</button>
+<div class="login-error" id="loginError"></div>
+</div>
+</div>
+ 
+<!-- APP -->
+<div id="app">
+ 
+<!-- TOPBAR -->
+<div class="topbar">
+<div class="topbar-left">
+<img src="https://images.squarespace-cdn.com/content/v1/620ed8b50c43390f3c3413d1/a1c81e4e-aba8-48b0-adcd-9600d43276da/main_logo_color_footer.png?format=300w%22
+onerror="this.style.display='none'">
+<span class="topbar-title">📊 Reporte Semanal de Mantenimiento</span>
+</div>
+<div class="topbar-right">
+<span class="tag-status tag-warn" id="statusTag">Sin configurar</span>
+<button class="btn-config" onclick="toggleConfig()">⚙️ Config URL</button>
+</div>
+</div>
+ 
+<div class="main">
+ 
+<!-- CONFIG PANEL -->
+<div id="configPanel">
+<strong>⚙️ Configuración — URL del Apps Script Web App</strong>
+<div class="cfg-row">
+<input type="text" id="scriptUrl" placeholder="Pega aquí la URL de tu Apps Script (termina en /exec)">
+<button onclick="guardarConfig()">Guardar</button>
+</div>
+<div class="note">
+Pasos en Google Sheets: <b>Extensiones → Apps Script</b> → pegar el código del servidor →
+<b>Implementar → Nueva implementación → Tipo: App web → Ejecutar como: Yo → Quién tiene acceso: Cualquier usuario → Implementar → copiar URL</b>
+</div>
+</div>
+ 
+<!-- FILTROS -->
+<div class="filter-bar">
+<div class="filter-group">
+<label>Área</label>
+<select id="selArea" onchange="actualizar()"><option>Todas</option></select>
+</div>
+<div class="filter-group">
+<label>Fecha inicio</label>
+<input type="date" id="fIni" onchange="actualizar()">
+</div>
+<div class="filter-group">
+<label>Fecha fin</label>
+<input type="date" id="fFin" onchange="actualizar()">
+</div>
+<div class="filter-group">
+<label>Horas operativas / día</label>
+<input type="number" id="hDia" value="16" min="1" max="24" onchange="actualizar()">
+</div>
+<div class="filter-actions">
+<button class="btn btn-reload" onclick="cargarDatos()">🔄 Recargar datos</button>
+<button class="btn btn-dl" onclick="descargarCSV()">⬇ Descargar CSV</button>
+</div>
+</div>
+ 
+<!-- KPIs -->
+<div class="kpi-grid">
+<div class="kpi-card blue">
+<div class="kpi-label"># Fallas correctivas</div>
+<div class="kpi-val" id="kFallas">—</div>
+</div>
+<div class="kpi-card orange">
+<div class="kpi-label">Downtime (min)</div>
+<div class="kpi-val" id="kDT">—</div>
+</div>
+<div class="kpi-card pink" style="padding-bottom:22px">
+<div class="kpi-label">MTTR (min)</div>
+<div class="kpi-val" id="kMTTR">—</div>
+<div class="semaforo" id="sMTTR"></div>
+</div>
+<div class="kpi-card purple" style="padding-bottom:22px">
+<div class="kpi-label">MTBF (h)</div>
+<div class="kpi-val" id="kMTBF">—</div>
+<div class="semaforo" id="sMTBF"></div>
+</div>
+<div class="kpi-card crimson">
+<div class="kpi-label">Máquina crítica</div>
+<div class="kpi-val sm" id="kMaq">—</div>
+</div>
+</div>
+ 
+<!-- PREVENTIVOS -->
+<div class="prev-row">
+<div class="surface-card">
+<h3>Preventivos realizados</h3>
+<div class="prev-val" id="kPrev">—</div>
+</div>
+<div class="surface-card">
+<h3>Preventivos por área</h3>
+<table><thead><tr><th>Área</th><th>Completados / Total</th></tr></thead>
+<tbody id="tPrevArea"></tbody>
+</table>
+</div>
+</div>
+ 
+<!-- GRÁFICAS -->
+<div class="charts-row">
+<div class="chart-card">
+<h3>Fallas correctivas por área</h3>
+<div style="position:relative;height:190px">
+<canvas id="cArea" role="img" aria-label="Fallas por área">Gráfica de barras.</canvas>
+</div>
+</div>
+<div class="chart-card">
+<h3>Fallas correctivas por máquina</h3>
+<div style="position:relative;height:190px" id="wrapMaq">
+<canvas id="cMaq" role="img" aria-label="Fallas por máquina">Gráfica horizontal.</canvas>
+</div>
+</div>
+</div>
+ 
+<div class="chart-card" style="margin-bottom:18px">
+<h3>Tendencia diaria de fallas correctivas</h3>
+<div style="position:relative;height:170px">
+<canvas id="cTend" role="img" aria-label="Tendencia diaria">Gráfica de línea.</canvas>
+</div>
+</div>
+ 
+<!-- TABLA DETALLE -->
+<div class="detail-card">
+<h3>Detalle de órdenes</h3>
+<div class="table-wrap">
+<table>
+<thead><tr id="thDetalle"></tr></thead>
+<tbody id="tbDetalle"></tbody>
+</table>
+</div>
+<div class="pag" id="paginacion"></div>
+</div>
+ 
+</div><!-- /main -->
+</div><!-- /app -->
+ 
+<script>
+// =============================================
+//  CONFIGURACIÓN
+// =============================================
+const CLAVE = "2171916";   // ← cambia la clave aquí
+let SCRIPT_URL = localStorage.getItem('mtto_scriptUrl') || "";
+let datosBase = [];
+let charts = {};
+let pgActual = 0;
+const PG = 8;
+ 
+// =============================================
+//  LOGIN
+// =============================================
+function login() {
+  const v = document.getElementById('passInput').value;
+  if (v === CLAVE) {
+    document.getElementById('loginBox').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    if (!SCRIPT_URL) {
+      document.getElementById('configPanel').style.display = 'block';
+      setStatus('warn', '⚠ Configura la URL del script');
+    } else {
+      cargarDatos();
+    }
+  } else {
+    document.getElementById('loginError').textContent = 'Clave incorrecta, intenta de nuevo.';
+    setTimeout(() => document.getElementById('loginError').textContent = '', 2500);
+  }
+}
+ 
+// =============================================
+//  CONFIG
+// =============================================
+function toggleConfig() {
+  const p = document.getElementById('configPanel');
+  p.style.display = p.style.display === 'none' ? 'block' : 'none';
+  if (SCRIPT_URL) document.getElementById('scriptUrl').value = SCRIPT_URL;
+}
+ 
+function guardarConfig() {
+  const url = document.getElementById('scriptUrl').value.trim();
+  if (!url.includes('script.google.com')) { alert('URL inválida — debe contener script.google.com'); return; }
+  SCRIPT_URL = url;
+  localStorage.setItem('mtto_scriptUrl', url);
+  document.getElementById('configPanel').style.display = 'none';
+  setStatus('ok', '✅ URL guardada');
+  cargarDatos();
+}
+ 
+function setStatus(type, msg) {
+  const el = document.getElementById('statusTag');
+  el.className = 'tag-status tag-' + type;
+  el.textContent = msg;
+}
+ 
+// =============================================
+//  API → Apps Script
+// =============================================
+async function api(params) {
+  if (!SCRIPT_URL) { alert('Primero configura la URL del Apps Script (botón ⚙️ Config URL)'); throw new Error('Sin URL'); }
+  const qs = new URLSearchParams(params).toString();
+  const res = await fetch(SCRIPT_URL + '?' + qs);
+  const json = await res.json();
+  if (!json.success) throw new Error(json.error || 'Error desconocido');
+  return json;
+}
+ 
+// =============================================
+//  LOADING
+// =============================================
+function showLoading(msg = 'Cargando...') {
+  document.getElementById('loadingMsg').textContent = msg;
+  document.getElementById('loadingOverlay').style.display = 'flex';
+}
+function hideLoading() { document.getElementById('loadingOverlay').style.display = 'none'; }
+ 
+// =============================================
+//  CARGAR DATOS
+// =============================================
+async function cargarDatos() {
+  showLoading('Cargando datos desde Google Sheets...');
+  try {
+    const res = await api({ action: 'getAll' });
+    datosBase = (res.data || []).map(r => ({
+      ...r,
+      fecha:              r.fecha ? r.fecha.split('T')[0] : '',
+      tiempo_min:         parseFloat(r.tiempo_min) || 0,
+      tipo_mantenimiento: (r.tipo_mantenimiento || '').toLowerCase(),
+      estatus:            (r.estatus || '').toLowerCase(),
+      area:               r.area || '',
+      maquina:            r.maquina || ''
+    }));
+    poblarFiltros();
+    pgActual = 0;
+    actualizar();
+    setStatus('ok', `✅ ${datosBase.length} registros`);
+  } catch (err) {
+    setStatus('err', '❌ Error: ' + err.message);
+    alert('No se pudo conectar con Google Sheets:\n' + err.message);
+  } finally {
+    hideLoading();
+  }
+}
+ 
+// =============================================
+//  POBLAR FILTROS
+// =============================================
+function poblarFiltros() {
+  const areas = [...new Set(datosBase.map(r => r.area))].filter(Boolean).sort();
+  const sel = document.getElementById('selArea');
+  sel.innerHTML = '<option>Todas</option>' + areas.map(a => `<option>${a}</option>`).join('');
+ 
+  const fechas = datosBase.map(r => r.fecha).filter(Boolean).sort();
+  if (fechas.length) {
+    document.getElementById('fIni').value = fechas[0];
+    document.getElementById('fFin').value = fechas[fechas.length - 1];
+  }
+}
+ 
+// =============================================
+//  FILTRAR
+// =============================================
+function filtrar() {
+  const area = document.getElementById('selArea').value;
+  const fi   = document.getElementById('fIni').value;
+  const ff   = document.getElementById('fFin').value;
+  return datosBase.filter(r => {
+    if (area !== 'Todas' && r.area !== area) return false;
+    if (fi && r.fecha < fi) return false;
+    if (ff && r.fecha > ff) return false;
+    return true;
+  });
+}
+ 
+// =============================================
+//  MINUTOS OPERATIVOS — considera calendario real
+//  Lunes–Viernes : hDia completas
+//  Sábado        : hDia / 2
+//  Domingo       : 0 (no cuenta)
+// =============================================
+function calcularMinutosOperativos(inicio, fin, horasPorDia) {
+  if (!inicio || !fin) return 0;
+  let minutos = 0;
+  const d    = new Date(inicio + 'T00:00:00');
+  const dFin = new Date(fin   + 'T00:00:00');
+  while (d <= dFin) {
+    const dow = d.getDay(); // 0 = domingo, 6 = sábado
+    if (dow === 0) {
+      // Domingo: no cuenta
+    } else if (dow === 6) {
+      minutos += (horasPorDia / 2) * 60; // Sábado: medio día
+    } else {
+      minutos += horasPorDia * 60;        // Lun–Vie: día completo
+    }
+    d.setDate(d.getDate() + 1);
+  }
+  return minutos;
+}
+ 
+// =============================================
+//  ACTUALIZAR TODO
+// =============================================
+function actualizar() {
+  const df = filtrar();
+  actualizarKPIs(df);
+  actualizarGraficas(df);
+  renderTabla(df);
+}
+ 
+// =============================================
+//  KPIs
+// =============================================
+function cnt(arr, fn) {
+  const m = {};
+  arr.forEach(r => { const k = fn(r); m[k] = (m[k] || 0) + 1; });
+  return m;
+}
+ 
+function actualizarKPIs(df) {
+  const corr   = df.filter(r => r.tipo_mantenimiento === 'correctivo');
+  const fallas = corr.length;
+  const dt     = corr.reduce((s, r) => s + r.tiempo_min, 0);
+ 
+  document.getElementById('kFallas').textContent = fallas;
+  document.getElementById('kDT').textContent = dt.toFixed(0);
+ 
+  if (fallas > 0) {
+    // ── MTTR ──────────────────────────────────────
+    const mttr = dt / fallas;
+    document.getElementById('kMTTR').textContent = mttr.toFixed(1);
+    document.getElementById('sMTTR').className =
+      'semaforo ' + (mttr <= 40 ? 's-verde' : mttr <= 60 ? 's-amarillo' : 's-rojo');
+ 
+    // ── MTBF — período basado en el filtro de fechas,
+    //    excluyendo domingos y con sábado a medio tiempo ──
+    const hDia   = parseFloat(document.getElementById('hDia').value) || 16;
+    const fIni   = document.getElementById('fIni').value;
+    const fFin   = document.getElementById('fFin').value;
+ 
+    const tTotal = calcularMinutosOperativos(fIni, fFin, hDia); // minutos operativos reales del período
+    const tOp    = Math.max(0, tTotal - dt);                     // descontando downtime
+    const mtbf   = (tOp / fallas) / 60;                         // convertir a horas
+ 
+    document.getElementById('kMTBF').textContent = mtbf.toFixed(2);
+    const u1 = hDia * 0.30, u2 = hDia * 0.15;
+    document.getElementById('sMTBF').className =
+      'semaforo ' + (mtbf >= u1 ? 's-verde' : mtbf >= u2 ? 's-amarillo' : 's-rojo');
+ 
+    // ── Máquina crítica ───────────────────────────
+    const maqCnt = cnt(corr, r => r.maquina);
+    const top    = Object.entries(maqCnt).sort((a,b) => b[1]-a[1])[0];
+    document.getElementById('kMaq').textContent = top ? `${top[0]} (${top[1]} fallas)` : '—';
+ 
+  } else {
+    ['kMTTR','kMTBF','kMaq'].forEach(id => document.getElementById(id).textContent = '—');
+    ['sMTTR','sMTBF'].forEach(id => document.getElementById(id).className = 'semaforo');
+  }
+ 
+  // ── Preventivos ───────────────────────────────
+  const prev    = df.filter(r => r.tipo_mantenimiento === 'preventivo');
+  const pHechos = prev.filter(r => r.estatus === 'completado').length;
+  const pTotal  = prev.length;
+  const porc    = pTotal > 0 ? Math.round((pHechos / pTotal) * 100) : 0;
+  document.getElementById('kPrev').textContent = `${pHechos} de ${pTotal} (${porc}%)`;
+ 
+  const areas = [...new Set(prev.map(r => r.area))].sort();
+  const tBody = document.getElementById('tPrevArea');
+  tBody.innerHTML = areas.length ? areas.map(a => {
+    const tot = prev.filter(r => r.area === a).length;
+    const com = prev.filter(r => r.area === a && r.estatus === 'completado').length;
+    const p   = tot > 0 ? Math.round((com/tot)*100) : 0;
+    return `<tr><td>${a}</td><td>${com} de ${tot} (${p}%)</td></tr>`;
+  }).join('') : '<tr><td colspan="2" class="empty-msg">Sin preventivos</td></tr>';
+}
+ 
+// =============================================
+//  GRÁFICAS
+// =============================================
+const COLOR = '#36648B';
+const CHART_OPT = {
+  responsive: true, maintainAspectRatio: false,
+  plugins: { legend: { display: false } },
+  scales: {
+    y: { beginAtZero: true, grid: { color: 'rgba(128,128,128,0.1)' }, ticks: { color: '#888', font: { size: 11 } } },
+    x: { grid: { display: false }, ticks: { color: '#888', font: { size: 10 }, autoSkip: false, maxRotation: 35 } }
+  }
+};
+ 
+function mkChart(id, cfg) {
+  if (charts[id]) charts[id].destroy();
+  charts[id] = new Chart(document.getElementById(id), cfg);
+}
+ 
+function actualizarGraficas(df) {
+  const corr = df.filter(r => r.tipo_mantenimiento === 'correctivo');
+ 
+  // Por área
+  const byArea = cnt(corr, r => r.area);
+  mkChart('cArea', {
+    type: 'bar',
+    data: { labels: Object.keys(byArea), datasets: [{ data: Object.values(byArea), backgroundColor: COLOR, borderRadius: 5 }] },
+    options: { ...CHART_OPT }
+  });
+ 
+  // Por máquina (horizontal)
+  const byMaq = Object.entries(cnt(corr, r => r.maquina)).sort((a,b) => b[1]-a[1]);
+  const hMaq  = Math.max(190, byMaq.length * 36 + 60);
+  document.getElementById('wrapMaq').style.height = hMaq + 'px';
+  mkChart('cMaq', {
+    type: 'bar',
+    data: { labels: byMaq.map(e => e[0]), datasets: [{ data: byMaq.map(e => e[1]), backgroundColor: COLOR, borderRadius: 5 }] },
+    options: {
+      ...CHART_OPT,
+      indexAxis: 'y',
+      scales: {
+        x: { beginAtZero: true, grid: { color: 'rgba(128,128,128,0.1)' }, ticks: { color: '#888', font: { size: 10 } } },
+        y: { grid: { display: false }, ticks: { color: '#888', font: { size: 10 } } }
+      }
+    }
+  });
+ 
+  // Tendencia
+  const byFecha  = cnt(corr, r => r.fecha);
+  const fechasOrd = Object.keys(byFecha).sort();
+  mkChart('cTend', {
+    type: 'line',
+    data: {
+      labels: fechasOrd,
+      datasets: [{ data: fechasOrd.map(f => byFecha[f]), borderColor: COLOR, backgroundColor: 'rgba(54,100,139,0.08)', tension: 0.3, pointRadius: 4, fill: true }]
+    },
+    options: {
+      ...CHART_OPT,
+      scales: {
+        y: { beginAtZero: true, grid: { color: 'rgba(128,128,128,0.1)' }, ticks: { color: '#888', font: { size: 10 } } },
+        x: { grid: { display: false }, ticks: { color: '#888', font: { size: 10 }, autoSkip: false, maxRotation: 40 } }
+      }
+    }
+  });
+}
+ 
+// =============================================
+//  TABLA DETALLE
+// =============================================
+function renderTabla(df) {
+  const thead = document.getElementById('thDetalle');
+  const tbody = document.getElementById('tbDetalle');
+  const pag   = document.getElementById('paginacion');
+ 
+  if (!df.length) {
+    thead.innerHTML = '';
+    tbody.innerHTML = '<tr><td colspan="6" class="empty-msg">Sin registros para este filtro</td></tr>';
+    pag.innerHTML = '';
+    return;
+  }
+ 
+  const cols = Object.keys(df[0]);
+  thead.innerHTML = cols.map(c => `<th>${c}</th>`).join('');
+ 
+  const total = Math.ceil(df.length / PG);
+  pgActual = Math.min(pgActual, total - 1);
+  const slice = df.slice(pgActual * PG, (pgActual + 1) * PG);
+  tbody.innerHTML = slice.map(r => '<tr>' + cols.map(c => `<td>${r[c] ?? ''}</td>`).join('') + '</tr>').join('');
+ 
+  pag.innerHTML = '';
+  for (let i = 0; i < total; i++) {
+    const b = document.createElement('button');
+    b.textContent = i + 1;
+    if (i === pgActual) b.classList.add('active');
+    b.onclick = () => { pgActual = i; renderTabla(df); };
+    pag.appendChild(b);
+  }
+}
+ 
+// =============================================
+//  DESCARGAR CSV
+// =============================================
+function descargarCSV() {
+  const df = filtrar();
+  if (!df.length) { alert('Sin datos para exportar.'); return; }
+  const cols = Object.keys(df[0]);
+  const rows = [cols.join(','), ...df.map(r => cols.map(c => `"${r[c] ?? ''}"`).join(','))].join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(rows);
+  const area = document.getElementById('selArea').value;
+  a.download = `mantenimiento_${area}_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+}
+ 
+// =============================================
+//  INIT
+// =============================================
+if (SCRIPT_URL) document.getElementById('scriptUrl').value = SCRIPT_URL;
+</script>
+</body>
+</html>
